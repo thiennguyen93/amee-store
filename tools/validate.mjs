@@ -44,6 +44,69 @@ const PR_AUTHOR = process.env.PR_AUTHOR || "";
 /// fix in a skin whose author has gone quiet.
 const MAINTAINERS = new Set(["thiennguyen93"]);
 
+/// The packages this PR actually submits, set by CI from the diff.
+///
+/// Distinct from the list being validated, which is *everything* whenever a
+/// tools/ or schema/ change could have invalidated any package. Two rules below
+/// — bump the version, updates come from the owner — are about a submission, not
+/// about shape, and applying them to a package the PR never touched fails a PR
+/// for someone else's already-published skin.
+///
+/// Empty means "no submissions", not "everything": a schema-only PR genuinely
+/// submits nothing, and neither does a publish.yml sweep.
+///
+/// **Set-but-empty and absent are different, and the difference is load-bearing.**
+/// GitHub still exports the variable when the expression behind it is empty, so
+/// an empty string is CI saying "I looked, there were none". Absent means nobody
+/// told us — a workflow that lost the `env:` line, or a new workflow that never
+/// had it. Both would otherwise disable the two rules, and silently disabling an
+/// authorization check is the failure mode worth being loud about. `assertScoped`
+/// makes the second case an error.
+const SUBMITTED_RAW = process.env.SUBMITTED_DIRS;
+const SUBMITTED = new Set(
+  (SUBMITTED_RAW || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(normalizeDir),
+);
+
+/// Refuses to run the submission rules on guesswork.
+///
+/// Called once, up front, rather than per package — a scoping mistake is a
+/// property of the run, and reporting it as one error beats repeating it for
+/// every package in the registry.
+function assertScoped() {
+  if (PR_AUTHOR && SUBMITTED_RAW === undefined) {
+    console.error(
+      "PR_AUTHOR is set but SUBMITTED_DIRS is not. The version-bump and " +
+        "ownership checks need to know which packages this PR submits, and " +
+        "guessing would mean skipping them. Pass SUBMITTED_DIRS from the " +
+        "workflow (empty string is a valid answer meaning 'no packages').",
+    );
+    process.exit(1);
+  }
+}
+
+/// Callers disagree on the shape of a package path in two ways: trailing slash
+/// (publish.yml passes `registry/*/*/` from a glob, the PR path passes
+/// `registry/skins/x` from a sed) and absoluteness (`listPackageDirs` returns
+/// absolute paths, CI's diff produces repo-relative ones).
+///
+/// Resolving both sides is what makes the comparison mean anything. A plain
+/// string compare silently never matches on a full sweep, which would leave the
+/// two submission rules permanently off instead of scoped — failing open on the
+/// exact checks that exist to stop someone publishing over another author's
+/// package.
+function normalizeDir(dir) {
+  return path.resolve(dir).replace(/\/+$/, "");
+}
+
+/// Whether this package is one the PR submitted, and so subject to the
+/// submission rules rather than only to the shape checks.
+function isSubmitted(dir) {
+  return SUBMITTED.has(normalizeDir(dir));
+}
+
 /// Whether git has anything under `relPath`. Used instead of a filesystem
 /// check wherever the question is "did the author commit this?" rather than
 /// "is it on disk right now?".
@@ -107,12 +170,20 @@ async function validatePackage(dirArg, { schemas, index }) {
         // Always wrong, in any context: the index would end up advertising an
         // older build than the one already released under this id.
         fail(`version ${manifest.version} is older than the published ${published.version}`);
-      } else if (cmp === 0 && PR_AUTHOR) {
-        // Only a PR has to bump. publish.yml re-validates every package on
-        // main, including ones whose version hasn't moved since their last
-        // release — treating that as an error would fail every publish run
-        // after the first. Re-publishing an unchanged version is a no-op
-        // there anyway: the release step skips a tag that already exists.
+      } else if (cmp === 0 && PR_AUTHOR && isSubmitted(dir)) {
+        // Only a submitted package has to bump.
+        //
+        // publish.yml re-validates every package on main, including ones whose
+        // version hasn't moved since their last release — treating that as an
+        // error would fail every publish run after the first. Re-publishing an
+        // unchanged version is a no-op there anyway: the release step skips a
+        // tag that already exists.
+        //
+        // `PR_AUTHOR` alone used to stand in for "this is a submission", and
+        // that was wrong in one case: a PR touching tools/ or schema/ makes CI
+        // re-validate everything, so every already-published package tripped
+        // this even though the PR never touched it. `isSubmitted` is the actual
+        // question. Both conditions stay — PR_AUTHOR keeps local runs quiet.
         fail(`version ${manifest.version} is already published — bump it`);
       }
     }
@@ -185,10 +256,14 @@ async function validatePackage(dirArg, { schemas, index }) {
     }
   }
 
-  // 7. Ownership — only meaningful in CI, and only for an existing package.
-  //    A brand-new package has no established owner to check against; that's
-  //    what human review is for.
-  if (PR_AUTHOR && !isExample && findPublished(index, kind, id)) {
+  // 7. Ownership — only meaningful in CI, only for a package this PR submits,
+  //    and only for one that already exists. A brand-new package has no
+  //    established owner to check against; that's what human review is for.
+  //
+  //    `isSubmitted` for the same reason as the version check above: without it
+  //    a tools/-only PR from a non-maintainer fails on every package in the
+  //    registry, none of which it proposed to change.
+  if (PR_AUTHOR && isSubmitted(dir) && !isExample && findPublished(index, kind, id)) {
     if (store.owner !== PR_AUTHOR && !MAINTAINERS.has(PR_AUTHOR)) {
       fail(`this package is owned by @${store.owner}, but this PR is from @${PR_AUTHOR}. Updates have to come from the owner or a maintainer.`);
     }
@@ -198,6 +273,7 @@ async function validatePackage(dirArg, { schemas, index }) {
 }
 
 async function main() {
+  assertScoped();
   const args = process.argv.slice(2);
   const schemas = await loadSchemas();
   const index = await readIndex();

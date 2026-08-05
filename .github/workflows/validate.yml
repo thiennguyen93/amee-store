@@ -18,6 +18,12 @@ on:
       - "examples/**"
       - "tools/**"
       - "schema/**"
+      # Not because a PR may change these — it may not — but so that one which
+      # does still reaches the guard below. Without them a PR touching only
+      # index.json matches no path, runs no workflow, and arrives at review with
+      # a green tick.
+      - "index.json"
+      - "index.json.minisig"
 
 permissions:
   contents: read
@@ -34,6 +40,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      # First, and pure git: a PR that hand-edits the index shouldn't get as far
+      # as running its own build command.
+      #
+      # publish.yml verifies the signature unconditionally, so main can never
+      # end up serving a bad one either way. What this adds is *where* the
+      # mistake surfaces — on the contributor's PR, rather than in a post-merge
+      # run they never look at.
+      #
+      # Three dots, not two. `base..HEAD` would also show commits that arrived
+      # on main after the branch started, so a contributor who merged main in
+      # would fail this for CI's own index commit. `base...HEAD` diffs against
+      # the merge base and shows only what the branch itself did — the same
+      # reason the step below already spells it that way.
+      - name: Refuse a hand-edited index or signature
+        run: |
+          base="origin/${{ github.base_ref }}"
+          if ! git diff --quiet "$base"...HEAD -- index.json index.json.minisig; then
+            echo "::error::index.json and index.json.minisig are generated and signed by the publish workflow, never edited by hand. Revert your changes to them — CI regenerates the index after merge."
+            exit 1
+          fi
+          echo "index and signature untouched by this branch"
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -45,27 +73,42 @@ jobs:
           files=$(git diff --name-only "$base"...HEAD)
           echo "$files" | sed 's/^/  /'
 
-          # A change to the tools or schemas can invalidate any package, so
-          # re-check everything rather than guessing at the blast radius.
-          if echo "$files" | grep -qE '^(tools|schema)/'; then
-            echo "dirs=" >> "$GITHUB_OUTPUT"
-            echo "all=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          dirs=$(echo "$files" \
+          # The packages this PR actually submits.
+          #
+          # Reported separately from the set to validate, and that separation is
+          # the point. A tools/ or schema/ change means every package gets
+          # re-checked for *shape*, while the submission rules — version must be
+          # bumped, updates must come from the owner — still apply only to what
+          # this PR touched. Collapsing the two lists is how a PR gets to skip
+          # both rules by also editing something under tools/.
+          #
+          # grep exiting 1 on no match doesn't fail the step: a pipeline's status
+          # is its last command, so `pkgs` just comes out empty.
+          pkgs=$(echo "$files" \
             | grep -E '^(registry/[a-z]+|examples)/[^/]+/' \
             | sed -E 's#^(registry/[a-z]+/[^/]+|examples/[^/]+)/.*#\1#' \
             | sort -u \
             | tr '\n' ' ')
-          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
-          echo "all=false" >> "$GITHUB_OUTPUT"
+          echo "pkgs=$pkgs" >> "$GITHUB_OUTPUT"
+
+          # A change to the tools or schemas can invalidate any package, so
+          # re-check everything rather than guessing at the blast radius. Empty
+          # `dirs` is how validate.mjs and build.mjs are told "all of them".
+          if echo "$files" | grep -qE '^(tools|schema)/'; then
+            echo "dirs=" >> "$GITHUB_OUTPUT"
+          else
+            echo "dirs=$pkgs" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Validate
         env:
           # Enables the ownership check in tools/validate.mjs — an update to an
           # existing package has to come from its owner or a maintainer.
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          # Scopes that check, and the version-bump one, to the packages this PR
+          # submits. Computed from the diff in CI, never read out of the PR's own
+          # files, so a PR can't shrink its own list.
+          SUBMITTED_DIRS: ${{ steps.changed.outputs.pkgs }}
         run: node tools/validate.mjs ${{ steps.changed.outputs.dirs }}
 
       - name: Build
