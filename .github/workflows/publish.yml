@@ -1,0 +1,114 @@
+name: publish
+
+# Runs after a merge to main. Builds every registry package, cuts a release for
+# any version that doesn't have one yet, then regenerates and commits
+# index.json — the file the homepage and Amee actually read.
+#
+# Rebuilding everything (rather than just what changed) is cheap here and means
+# index.json is always derived from the full current state of the registry, so
+# a bad partial run can't leave it describing a mix of two commits.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "registry/**"
+      - "tools/**"
+      - "schema/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Serialised: two runs racing would both try to commit index.json.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate
+        run: node tools/validate.mjs
+
+      - name: Build every registry package
+        run: |
+          shopt -s nullglob
+          dirs=(registry/*/*/)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "registry is empty — nothing to publish"
+            exit 0
+          fi
+          node tools/build.mjs "${dirs[@]}"
+
+      - name: Create a release for any new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          for meta in dist/*.json; do
+            # One read, emitted as shell assignments. Values come from our own
+            # build tool, but they still go through JSON.stringify so a stray
+            # quote in an id could never break out into the shell.
+            eval "$(node -e '
+              const m = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+              for (const k of ["kind", "id", "version", "sha256", "file"]) {
+                console.log(`meta_${k}=${JSON.stringify(String(m[k]))}`);
+              }
+            ' "$meta")"
+            kind=$meta_kind; id=$meta_id; version=$meta_version
+            sha=$meta_sha256; file=dist/$meta_file
+            tag="${kind}-${id}-v${version}"
+
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "= $tag already released"
+              continue
+            fi
+
+            # The digest goes in the release notes as well as index.json, so
+            # it's recorded somewhere the index can't silently rewrite.
+            gh release create "$tag" "$file" \
+              --title "$id $version" \
+              --notes "$(printf '`%s` %s\n\nSHA-256: `%s`\n\nSource: [registry/%s/%s](https://github.com/%s/tree/main/registry/%s/%s)\n\nInstall from the [Amee store](https://amee.thiennguyen.dev/store).' \
+                "$id" "$version" "$sha" "$kind" "$id" "${{ github.repository }}" "$kind" "$id")"
+            echo "+ released $tag"
+          done
+
+      - name: Regenerate index.json
+        run: node tools/build-index.mjs
+
+      - name: Commit index.json
+        run: |
+          if git diff --quiet -- index.json; then
+            echo "index.json unchanged"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git commit -m "chore: regenerate index.json"
+          git push
+
+      - name: Refresh the homepage
+        # The homepage ships a vendored snapshot of index.json for first paint
+        # and refreshes from raw.githubusercontent.com at runtime, so this is
+        # only about re-baking the snapshot. Optional: if the secret isn't set
+        # the store still updates, just with a stale seed until the next deploy.
+        #
+        # Guarded in bash rather than with `if:` — a step's own `env:` block
+        # isn't in scope for its `if:` expression, so the obvious spelling
+        # silently evaluates to always-false.
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_PAGES_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "CLOUDFLARE_PAGES_DEPLOY_HOOK not set — skipping"
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" -o /dev/null && echo "deploy hook fired"

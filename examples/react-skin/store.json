@@ -1,0 +1,15 @@
+{
+  "kind": "skin",
+  "owner": "thiennguyen93",
+  "license": "MIT",
+  "tags": ["example", "react", "visualizer"],
+  "homepage": "https://github.com/thiennguyen93/amee-store",
+  "sdkVersion": "1",
+  "minAmeeVersion": "1.6.0",
+  "preview": "media/preview.png",
+  "build": {
+    "packageManager": "npm",
+    "command": "build",
+    "output": "dist"
+  }
+}

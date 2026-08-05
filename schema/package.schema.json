@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/thiennguyen93/amee-store/main/schema/package.schema.json",
+  "title": "Amee store package metadata",
+  "description": "store.json — everything the STORE needs that the skin itself doesn't. Deliberately disjoint from manifest.json: name, author, description, version and the window dimensions are read from the manifest and never re-typed here, so there is exactly one source of truth for each fact. This file is not shipped inside the .ybskin.",
+  "type": "object",
+  "required": ["kind", "owner", "license", "preview"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "description": "Which registry this package belongs to. Only `skin` is open today; the field exists so extensions can be added without reshaping anything.",
+      "enum": ["skin"]
+    },
+    "owner": {
+      "type": "string",
+      "description": "GitHub login allowed to publish updates to this package. CI checks the PR author against it.",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$"
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX identifier, e.g. MIT. A LICENSE file in the package directory is encouraged but not required.",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "tags": {
+      "type": "array",
+      "description": "Free-form filter chips on the store page. Keep them short and lowercase.",
+      "maxItems": 6,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,19}$" }
+    },
+    "homepage": {
+      "type": "string",
+      "description": "Where a curious user can read more — the skin's own repo, usually.",
+      "pattern": "^https://"
+    },
+    "sdkVersion": {
+      "description": "The window.amee SDK contract this skin was written against (`amee.version`). Bumped only on a breaking SDK change.",
+      "enum": ["1"]
+    },
+    "minAmeeVersion": {
+      "type": "string",
+      "description": "Oldest Amee release this skin works on. Shown on the store card so a user on an older build isn't handed a skin that needs an SDK member they don't have.",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Package-relative path to the store card image. Required — a store listing with no picture is not a listing.",
+      "pattern": "^media/[A-Za-z0-9._-]+\\.png$"
+    },
+    "screenshots": {
+      "type": "array",
+      "description": "Extra images for the detail panel.",
+      "maxItems": 6,
+      "items": { "type": "string", "pattern": "^media/[A-Za-z0-9._-]+\\.(png|jpg|webp)$" }
+    },
+    "build": {
+      "type": "object",
+      "description": "Present when the package is compiled from source rather than shipping a hand-written entry file. Its point is reviewability: CI runs the build so the repo can hold readable source instead of a committed bundle nobody can audit.",
+      "required": ["packageManager", "command", "output"],
+      "additionalProperties": false,
+      "properties": {
+        "packageManager": { "enum": ["npm", "pnpm"] },
+        "command": {
+          "type": "string",
+          "description": "package.json script name to run. Not a shell string — it is passed as a single argv element to `<pm> run`.",
+          "pattern": "^[a-z0-9][a-z0-9:_-]{0,39}$"
+        },
+        "output": {
+          "type": "string",
+          "description": "Directory the build writes to, package-relative. Its contents plus manifest.json become the .ybskin.",
+          "pattern": "^[A-Za-z0-9._-]+$"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+# Built .ybskin archives. CI produces these and attaches them to a release;
+# a package's build output must never be committed (validate.mjs enforces it),
+# because the point of this repo is that a reviewer reads source, not blobs.
+/dist/
+/.build/
+
+# Per-package build output and dependencies, for packages that declare `build`.
+**/node_modules/
+registry/*/*/dist/
+examples/*/dist/
+
+.DS_Store

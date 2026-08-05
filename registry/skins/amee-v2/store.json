@@ -1,0 +1,10 @@
+{
+  "kind": "skin",
+  "owner": "thiennguyen93",
+  "license": "MIT",
+  "tags": ["compact", "minimal", "dark"],
+  "homepage": "https://github.com/thiennguyen93/amee-store",
+  "sdkVersion": "1",
+  "minAmeeVersion": "1.6.0",
+  "preview": "media/preview.png"
+}
