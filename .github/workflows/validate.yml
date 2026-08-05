@@ -1,0 +1,101 @@
+name: validate
+
+# Deliberately `pull_request`, NOT `pull_request_target`.
+#
+# This workflow runs a package's own build command (see store.json's `build`),
+# which is arbitrary code from a contributor. On `pull_request` a fork gets a
+# read-only GITHUB_TOKEN and no access to secrets, so that code can't do
+# anything to this repository. `pull_request_target` would hand it a writable
+# token with the secrets attached — the well-known way to lose a registry.
+#
+# The consequence is that we cannot post a PR comment from here. The build
+# results go to the job summary instead, which needs no token and shows up on
+# the PR's Checks tab.
+on:
+  pull_request:
+    paths:
+      - "registry/**"
+      - "examples/**"
+      - "tools/**"
+      - "schema/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Work out which packages changed
+        id: changed
+        run: |
+          base="origin/${{ github.base_ref }}"
+          files=$(git diff --name-only "$base"...HEAD)
+          echo "$files" | sed 's/^/  /'
+
+          # A change to the tools or schemas can invalidate any package, so
+          # re-check everything rather than guessing at the blast radius.
+          if echo "$files" | grep -qE '^(tools|schema)/'; then
+            echo "dirs=" >> "$GITHUB_OUTPUT"
+            echo "all=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          dirs=$(echo "$files" \
+            | grep -E '^(registry/[a-z]+|examples)/[^/]+/' \
+            | sed -E 's#^(registry/[a-z]+/[^/]+|examples/[^/]+)/.*#\1#' \
+            | sort -u \
+            | tr '\n' ' ')
+          echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          echo "all=false" >> "$GITHUB_OUTPUT"
+
+      - name: Validate
+        env:
+          # Enables the ownership check in tools/validate.mjs — an update to an
+          # existing package has to come from its owner or a maintainer.
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: node tools/validate.mjs ${{ steps.changed.outputs.dirs }}
+
+      - name: Build
+        id: build
+        run: node tools/build.mjs ${{ steps.changed.outputs.dirs }}
+
+      - name: Summarise the artifacts
+        if: always() && steps.build.outcome == 'success'
+        run: |
+          {
+            echo "### Built packages"
+            echo
+            echo "| package | version | size | sha256 |"
+            echo "|---|---|---:|---|"
+            for f in dist/*.json; do
+              [ -e "$f" ] || continue
+              node -e '
+                const m = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+                const kb = (m.sizeBytes / 1024).toFixed(1);
+                console.log(`| \`${m.id}\` | ${m.version} | ${kb} KB | \`${m.sha256}\` |`);
+              ' "$f"
+            done
+            echo
+            echo "Download the **ybskin** artifact below and drag the \`.ybskin\` onto Amee's Settings → Skins tab to try it before approving."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the built packages
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ybskin
+          path: dist/*.ybskin
+          if-no-files-found: warn

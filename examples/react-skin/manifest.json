@@ -1,0 +1,10 @@
+{
+  "id": "react-skin",
+  "name": "React Skin",
+  "author": "amee",
+  "description": "A skin written in React + TypeScript instead of plain DOM APIs, bundled by Vite into a single self-contained main.js with React and its CSS inlined. Adds a live spectrum visualiser via amee.onSpectrum() on top of the usual artwork, transport and volume controls.",
+  "version": "1.0.0",
+  "entry": "main.js",
+  "width": 320,
+  "height": 100
+}

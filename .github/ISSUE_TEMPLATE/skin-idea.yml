@@ -1,0 +1,36 @@
+name: Skin idea or request
+description: Suggest a skin you'd like to see, or ask a question about publishing one.
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submitting a skin you've built? Don't open an issue — open a pull
+        request. See [CONTRIBUTING.md](https://github.com/thiennguyen93/amee-store/blob/main/CONTRIBUTING.md).
+
+        This form is for ideas, requests, and questions.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What's the idea?
+      description: What should it look like or do? A sketch or a reference image helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: intent
+    attributes:
+      label: Are you planning to build it?
+      options:
+        - "Yes — just floating the idea first"
+        - "No — hoping someone else picks it up"
+        - "Not sure yet"
+    validations:
+      required: true
+  - type: textarea
+    id: sdk
+    attributes:
+      label: Anything the SDK can't do yet?
+      description: >
+        If your idea needs something `window.amee` doesn't expose, say so —
+        that's a gap worth knowing about. The SDK is documented in
+        docs/SKINS.md in the Amee repo.

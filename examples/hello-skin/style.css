@@ -1,0 +1,137 @@
+/* Hello Skin's own stylesheet, loaded via amee.getSkinAsset("style.css").
+   A skin owns the whole window, so it styles from scratch — none of Amee's
+   own CSS applies here beyond the reset below. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+.hello {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100vw;
+  height: 100vh;
+  padding: 0 14px;
+  color: #f4f4f6;
+  background: rgba(20, 20, 24, 0.78);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+}
+
+.hello__art {
+  position: relative;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hello__art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hello__art-fallback svg {
+  width: 22px;
+  height: 22px;
+  opacity: 0.45;
+}
+
+.hello__body {
+  flex: 1 1 auto;
+  min-width: 0; /* lets the title actually ellipsize inside a flex row */
+}
+
+.hello__title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hello__artist {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: rgba(244, 244, 246, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hello__bar {
+  height: 3px;
+  margin-top: 7px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.hello__fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--accent, #8b7cff);
+  transition: width 0.25s linear;
+}
+
+.hello__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hello__btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.hello__btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hello__btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.hello__btn--primary svg {
+  width: 21px;
+  height: 21px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hello__fill,
+  .hello__btn {
+    transition: none;
+  }
+}

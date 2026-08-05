@@ -1,0 +1,12 @@
+{
+  "id": "amee-v2",
+  "name": "amee v2",
+  "author": "amee",
+  "description": "A compact take on the mini player: a circular progress ring wrapped around the artwork instead of a bar, its own bundled stylesheet, and an accent colour pulled from whichever Amee colour theme is active.",
+  "version": "1.0.0",
+  "entry": "main.js",
+  "width": 320,
+  "height": 96,
+  "graceful_shutdown": true,
+  "graceful_shutdown_timeout_ms": 400
+}
