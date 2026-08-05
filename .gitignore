@@ -9,4 +9,15 @@
 registry/*/*/dist/
 examples/*/dist/
 
+# `tauri signer sign` writes this: base64 *of* the minisign file. What gets
+# committed is index.json.minisig, the raw form Amee can actually verify. Ignored
+# so a local rehearsal can't commit the wrong one under a name that looks right.
+index.json.sig
+
+# Signing keys never belong in the repo. The public half is committed
+# deliberately, as keys/store-index.pub — everything else here is a mistake.
+*.key
+*.pem
+!keys/*.pub
+
 .DS_Store

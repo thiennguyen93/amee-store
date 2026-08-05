@@ -111,6 +111,12 @@ async function main() {
 
   // Only stamp a new generatedAt when something actually changed, so a
   // no-op run doesn't produce a commit whose whole diff is a timestamp.
+  //
+  // Byte-stability here is load-bearing beyond tidiness: publish.yml decides
+  // whether to re-sign the index by checking whether the existing signature
+  // still verifies, which is only equivalent to "did the index change" while a
+  // no-op run leaves the file identical. Stamp unconditionally and every push
+  // re-signs and commits. See SECURITY.md, "How CI decides to sign".
   const unchanged = JSON.stringify(next.kinds) === JSON.stringify(previous.kinds ?? {});
   if (!unchanged) next.generatedAt = new Date().toISOString();
 

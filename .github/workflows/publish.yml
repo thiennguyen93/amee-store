@@ -20,6 +20,9 @@ permissions:
   contents: write
 
 # Serialised: two runs racing would both try to commit index.json.
+#
+# Keep `cancel-in-progress: false`. Cancelling between the signing step and the
+# push is exactly how main ends up with an index whose signature was left behind.
 concurrency:
   group: publish
   cancel-in-progress: false
@@ -27,6 +30,13 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Once the signing secrets exist, create a `store-signing` environment with
+    # its deployment branches restricted to main, move STORE_INDEX_PRIVATE_KEY /
+    # STORE_INDEX_KEY_PASSWORD into it, and uncomment this. A repo-level secret
+    # is readable by a run on any ref, and this workflow accepts
+    # workflow_dispatch — so anyone who can dispatch it from a branch can reach
+    # a repo-level signing key.
+    environment: store-signing
     steps:
       - uses: actions/checkout@v4
 
@@ -83,16 +93,92 @@ jobs:
       - name: Regenerate index.json
         run: node tools/build-index.mjs
 
-      - name: Commit index.json
+      # Decide by verifying, not by diffing. A valid signature over index.json
+      # is itself proof the index hasn't changed — and unlike a file diff it
+      # also catches the two cases that would otherwise strand an unverifiable
+      # index on main: the signature missing entirely, and a signature left over
+      # from a rotated key.
+      #
+      # `signing=off` is the pre-rollout state: no key committed and no secret
+      # set. It publishes exactly as this workflow always has. Amee treats an
+      # unsigned index as unsigned and installs anyway, so this is a warning,
+      # not a failure — breaking every publish because a key hasn't been issued
+      # yet would be the worse trade.
+      - name: Decide whether index.json needs signing
+        id: sig
+        env:
+          SIGNING_KEY: ${{ secrets.STORE_INDEX_PRIVATE_KEY }}
         run: |
-          if git diff --quiet -- index.json; then
-            echo "index.json unchanged"
+          if [ ! -f keys/store-index.pub ] && [ -z "$SIGNING_KEY" ]; then
+            # A signature with no key to check it against is worse than none:
+            # main would be serving something nothing can verify, and the only
+            # symptom is Amee quietly treating the index as unsigned.
+            if [ -f index.json.minisig ]; then
+              echo "::error::index.json.minisig exists but signing is not configured — remove the signature or commit keys/store-index.pub."
+              exit 1
+            fi
+            echo "::warning::index signing is not configured (no keys/store-index.pub, no STORE_INDEX_PRIVATE_KEY) — publishing unsigned. See SECURITY.md."
+            echo "signing=off" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ ! -f keys/store-index.pub ]; then
+            echo "::error::STORE_INDEX_PRIVATE_KEY is set but keys/store-index.pub is missing — commit the public half so CI can verify what it signed."
+            exit 1
+          fi
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::keys/store-index.pub is committed but STORE_INDEX_PRIVATE_KEY is not set — the index cannot be signed."
+            exit 1
+          fi
+          if [ -f index.json.minisig ] && node tools/verify-index-sig.mjs; then
+            echo "signing=current" >> "$GITHUB_OUTPUT"
+          else
+            echo "signing=resign" >> "$GITHUB_OUTPUT"
+          fi
+
+      # minisign stamps timestamp:<epoch> into the trusted comment, so signing
+      # byte-identical bytes yields a different file every run. Gated on the
+      # step above so an unchanged index doesn't churn a commit per push.
+      - name: Sign index.json
+        if: steps.sig.outputs.signing == 'resign'
+        env:
+          # No -k flag: the CLI reads these from the environment. Passing the key
+          # as an argument would put it in argv, which any process on the runner
+          # can read. (-f is --private-key-path and takes a path, not the key.)
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.STORE_INDEX_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.STORE_INDEX_KEY_PASSWORD }}
+        run: |
+          rm -f index.json.sig
+          npx --yes --package=@tauri-apps/cli@2 -- tauri signer sign index.json
+          # `signer sign` writes <input>.sig holding base64 OF the minisign file,
+          # with no flag for the path or for raw output. Amee calls
+          # Signature::decode on the raw 4-line form, so this decode is not
+          # cosmetic — skipping it publishes a signature nothing can verify.
+          base64 --decode index.json.sig > index.json.minisig
+          rm -f index.json.sig
+
+      # Unconditional, including on the `current` path — so a hand-edited
+      # index.json.minisig on main cannot survive a publish.
+      - name: Verify the signature Amee will see
+        if: steps.sig.outputs.signing != 'off'
+        run: node tools/verify-index-sig.mjs
+
+      - name: Commit index.json and its signature
+        run: |
+          git add -- index.json
+          # An `if`, not `[ -f … ] && …`: the default shell is `bash -e`, so a
+          # bare test that returns 1 would exit the step rather than skip a line.
+          if [ -f index.json.minisig ]; then
+            git add -- index.json.minisig
+          fi
+          if git diff --cached --quiet; then
+            echo "index and signature already up to date"
             exit 0
           fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.json
           git commit -m "chore: regenerate index.json"
+          # One commit, so main is never briefly serving an index newer than the
+          # signature over it.
           git push
 
       - name: Refresh the homepage

@@ -1,0 +1,23 @@
+# Review is the only real control this registry has (see SECURITY.md), and these
+# paths are the ones where a change is worth more than the package it ships.
+#
+# `publish.yml` runs with `contents: write` and holds the index signing key, and
+# it executes `tools/*.mjs` from the same commit — so a change to the tooling is
+# a change to what runs next to that key. The signing step itself is plain shell
+# plus a pinned CLI, deliberately, so no repo-authored code ever touches the key;
+# these entries are what keeps that true.
+#
+# `keys/` is the app's trust root: the public half of the index signing key, which
+# Amee compiles in as STORE_INDEX_PUBKEYS. Rotating it is a reviewed change here
+# and an app release there, never a quiet edit.
+#
+# Contributors adding a skin touch registry/<kind>/<id>/ only, which is
+# deliberately not listed — ownership for those is enforced per-package by
+# `store.json`'s `owner` field in tools/validate.mjs.
+
+/.github/       @thiennguyen93
+/tools/         @thiennguyen93
+/schema/        @thiennguyen93
+/keys/          @thiennguyen93
+/index.json     @thiennguyen93
+/SECURITY.md    @thiennguyen93
