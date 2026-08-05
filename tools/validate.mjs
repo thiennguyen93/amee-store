@@ -52,14 +52,40 @@ const MAINTAINERS = new Set(["thiennguyen93"]);
 /// about shape, and applying them to a package the PR never touched fails a PR
 /// for someone else's already-published skin.
 ///
-/// Empty means "no submissions", not "everything": a full sweep with nothing
-/// submitted is exactly what a schema-only PR and every publish.yml run are.
+/// Empty means "no submissions", not "everything": a schema-only PR genuinely
+/// submits nothing, and neither does a publish.yml sweep.
+///
+/// **Set-but-empty and absent are different, and the difference is load-bearing.**
+/// GitHub still exports the variable when the expression behind it is empty, so
+/// an empty string is CI saying "I looked, there were none". Absent means nobody
+/// told us — a workflow that lost the `env:` line, or a new workflow that never
+/// had it. Both would otherwise disable the two rules, and silently disabling an
+/// authorization check is the failure mode worth being loud about. `assertScoped`
+/// makes the second case an error.
+const SUBMITTED_RAW = process.env.SUBMITTED_DIRS;
 const SUBMITTED = new Set(
-  (process.env.SUBMITTED_DIRS || "")
+  (SUBMITTED_RAW || "")
     .split(/\s+/)
     .filter(Boolean)
     .map(normalizeDir),
 );
+
+/// Refuses to run the submission rules on guesswork.
+///
+/// Called once, up front, rather than per package — a scoping mistake is a
+/// property of the run, and reporting it as one error beats repeating it for
+/// every package in the registry.
+function assertScoped() {
+  if (PR_AUTHOR && SUBMITTED_RAW === undefined) {
+    console.error(
+      "PR_AUTHOR is set but SUBMITTED_DIRS is not. The version-bump and " +
+        "ownership checks need to know which packages this PR submits, and " +
+        "guessing would mean skipping them. Pass SUBMITTED_DIRS from the " +
+        "workflow (empty string is a valid answer meaning 'no packages').",
+    );
+    process.exit(1);
+  }
+}
 
 /// Callers disagree on the shape of a package path in two ways: trailing slash
 /// (publish.yml passes `registry/*/*/` from a glob, the PR path passes
@@ -247,6 +273,7 @@ async function validatePackage(dirArg, { schemas, index }) {
 }
 
 async function main() {
+  assertScoped();
   const args = process.argv.slice(2);
   const schemas = await loadSchemas();
   const index = await readIndex();
