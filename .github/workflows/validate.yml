@@ -18,6 +18,12 @@ on:
       - "examples/**"
       - "tools/**"
       - "schema/**"
+      # Not because a PR may change these — it may not — but so that one which
+      # does still reaches the guard below. Without them a PR touching only
+      # index.json matches no path, runs no workflow, and arrives at review with
+      # a green tick.
+      - "index.json"
+      - "index.json.minisig"
 
 permissions:
   contents: read
@@ -33,6 +39,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # First, and pure git: a PR that hand-edits the index shouldn't get as far
+      # as running its own build command.
+      #
+      # publish.yml verifies the signature unconditionally, so main can never
+      # end up serving a bad one either way. What this adds is *where* the
+      # mistake surfaces — on the contributor's PR, rather than in a post-merge
+      # run they never look at.
+      #
+      # Three dots, not two. `base..HEAD` would also show commits that arrived
+      # on main after the branch started, so a contributor who merged main in
+      # would fail this for CI's own index commit. `base...HEAD` diffs against
+      # the merge base and shows only what the branch itself did — the same
+      # reason the step below already spells it that way.
+      - name: Refuse a hand-edited index or signature
+        run: |
+          base="origin/${{ github.base_ref }}"
+          if ! git diff --quiet "$base"...HEAD -- index.json index.json.minisig; then
+            echo "::error::index.json and index.json.minisig are generated and signed by the publish workflow, never edited by hand. Revert your changes to them — CI regenerates the index after merge."
+            exit 1
+          fi
+          echo "index and signature untouched by this branch"
 
       - uses: actions/setup-node@v4
         with:

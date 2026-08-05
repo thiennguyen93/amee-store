@@ -39,7 +39,7 @@
     },
     "minAmeeVersion": {
       "type": "string",
-      "description": "Oldest Amee release this skin works on. Shown on the store card so a user on an older build isn't handed a skin that needs an SDK member they don't have.",
+      "description": "Oldest Amee release this skin works on. Shown on the store card, and enforced: Amee refuses to install a package that needs a newer build than the one running, before downloading it. Setting this higher than your skin really needs will block installs for users who would have been fine.",
       "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
     },
     "preview": {
