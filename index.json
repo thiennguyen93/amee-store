@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-06T06:44:39.786Z",
+  "generatedAt": "2026-08-09T08:22:15.223Z",
   "kinds": {
     "skins": [
       {
@@ -8,7 +8,7 @@
         "name": "amee v2",
         "author": "amee",
         "description": "A compact take on the mini player: a circular progress ring wrapped around the artwork instead of a bar, its own bundled stylesheet, and an accent colour pulled from whichever Amee colour theme is active.",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "license": "MIT",
         "tags": [
           "compact",
@@ -23,11 +23,11 @@
         "resizable": false,
         "preview": "https://raw.githubusercontent.com/thiennguyen93/amee-store/main/registry/skins/amee-v2/media/preview.png",
         "screenshots": [],
-        "download": "https://github.com/thiennguyen93/amee-store/releases/download/skins-amee-v2-v1.0.1/amee-v2-1.0.1.ybskin",
-        "sha256": "0402fdb6359bf7ce4fdd66fcc15ac3fd9ef7746f471b462c09ac22c833fe90d4",
-        "sizeBytes": 5979,
+        "download": "https://github.com/thiennguyen93/amee-store/releases/download/skins-amee-v2-v1.0.2/amee-v2-1.0.2.ybskin",
+        "sha256": "7132790dc0c1684e0f30c0713d221336be3c85435f81512ca05b8dd079fcbc22",
+        "sizeBytes": 6162,
         "sourceUrl": "https://github.com/thiennguyen93/amee-store/tree/main/registry/skins/amee-v2",
-        "publishedAt": "2026-08-06T06:44:39.784Z"
+        "publishedAt": "2026-08-09T08:22:15.221Z"
       }
     ],
     "extensions": []
