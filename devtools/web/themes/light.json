@@ -1,0 +1,24 @@
+{
+  "id": "light",
+  "name": "Light Glass (harness only)",
+  "author": "amee-store devtools",
+  "description": "Not a theme Amee ships. It exists because every bundled theme is dark, so a skin that hard-codes white text, a dark drop shadow, or a translucent black surface looks correct against all three — and then a user imports a light theme and it becomes unreadable. Preview against this before you publish.",
+  "tokens": {
+    "--font": "-apple-system, 'SF Pro Text', Inter, Avenir, Helvetica, Arial, sans-serif",
+    "--text": "#1b1a24",
+    "--text-muted": "rgba(27, 26, 36, 0.6)",
+    "--accent": "#5b4bd6",
+    "--accent-text": "#ffffff",
+    "--danger": "#c02b2b",
+    "--warning": "#9a6b00",
+    "--surface": "rgba(255, 255, 255, 0.72)",
+    "--surface-hover": "rgba(255, 255, 255, 0.86)",
+    "--surface-active": "rgba(226, 224, 236, 0.9)",
+    "--border": "rgba(24, 22, 40, 0.14)",
+    "--blur": "28px",
+    "--radius": "16px",
+    "--radius-pill": "999px",
+    "--shadow": "0 4px 18px rgba(40, 36, 70, 0.18)",
+    "--bg": "linear-gradient(165deg, #f6f5fb 0%, #eceaf5 60%, #e4e1f0 100%)"
+  }
+}

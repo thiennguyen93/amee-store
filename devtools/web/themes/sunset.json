@@ -1,0 +1,24 @@
+{
+  "id": "sunset",
+  "name": "Sunset Glass",
+  "author": "Amee",
+  "description": "Warm coral-and-amber frosted glass.",
+  "tokens": {
+    "--font": "-apple-system, 'SF Pro Text', Inter, Avenir, Helvetica, Arial, sans-serif",
+    "--text": "#fbf1ea",
+    "--text-muted": "rgba(251, 241, 234, 0.64)",
+    "--accent": "#ff8a5c",
+    "--accent-text": "#2b1206",
+    "--danger": "#ff6b6b",
+    "--warning": "#f0c04a",
+    "--surface": "rgba(46, 28, 26, 0.55)",
+    "--surface-hover": "rgba(64, 40, 36, 0.65)",
+    "--surface-active": "rgba(32, 18, 16, 0.7)",
+    "--border": "rgba(255, 226, 210, 0.18)",
+    "--blur": "28px",
+    "--radius": "16px",
+    "--radius-pill": "999px",
+    "--shadow": "0 4px 18px rgba(30, 5, 0, 0.32)",
+    "--bg": "radial-gradient(1200px circle at 15% -10%, rgba(255, 138, 92, 0.25), transparent 55%), radial-gradient(900px circle at 100% 0%, rgba(255, 92, 141, 0.14), transparent 50%), linear-gradient(165deg, #2a1a1c 0%, #1a1112 60%, #0f0a0a 100%)"
+  }
+}

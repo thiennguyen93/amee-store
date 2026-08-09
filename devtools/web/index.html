@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Amee skin harness</title>
+    <link rel="stylesheet" href="/web/harness.css" />
+  </head>
+  <body>
+    <div class="amee-dev" id="app">
+      <header class="amee-dev__bar">
+        <div class="amee-dev__brand">
+          <span class="amee-dev__dot"></span>
+          <select id="package-select" title="Package to preview"></select>
+          <span class="amee-dev__chip" id="manifest-chip"></span>
+        </div>
+
+        <div class="amee-dev__transport" id="transport">
+          <button data-transport="previous" title="Previous (backend, not the skin)">⏮</button>
+          <button data-transport="toggle" title="Play / pause">▶</button>
+          <button data-transport="next" title="Next">⏭</button>
+          <input type="range" id="mirror-seek" min="0" max="1000" value="0" title="Seek" />
+          <span class="amee-dev__time" id="mirror-time">0:00 / 0:00</span>
+          <input type="range" id="mirror-volume" min="0" max="100" value="60" title="Volume" />
+        </div>
+
+        <div class="amee-dev__actions">
+          <button id="enable-audio" class="amee-dev__cta">Enable audio</button>
+          <span class="amee-dev__zoom">
+            <button data-zoom="0.5">.5×</button>
+            <button data-zoom="1" class="is-active">1×</button>
+            <button data-zoom="2">2×</button>
+          </span>
+          <button id="reload" title="Remount the skin (r)">Reload</button>
+        </div>
+      </header>
+
+      <main class="amee-dev__main">
+        <section class="amee-dev__viewport" id="viewport">
+          <div class="amee-dev__backdrops" id="backdrops">
+            <button data-backdrop="desk-dark" class="is-active">Dark desk</button>
+            <button data-backdrop="desk-light">Light desk</button>
+            <button data-backdrop="photo">Photo</button>
+            <button data-backdrop="checker">Checker</button>
+          </div>
+
+          <div class="amee-dev__stage-wrap" id="stage-wrap">
+            <div class="amee-dev__pip" id="pip-rect" hidden>
+              <span>Picture-in-Picture</span>
+            </div>
+            <div class="amee-dev__stage" id="stage">
+              <iframe id="frame" title="Skin stage" src="about:blank"></iframe>
+              <div class="amee-dev__guides" id="guides"></div>
+            </div>
+            <div class="amee-dev__stage-label" id="stage-label"></div>
+          </div>
+
+          <div class="amee-dev__banner" id="banner" hidden></div>
+          <div class="amee-dev__chips" id="chips"></div>
+        </section>
+
+        <aside class="amee-dev__rail">
+          <nav class="amee-dev__tabs" id="tabs"></nav>
+          <div class="amee-dev__panel" id="panel"></div>
+        </aside>
+      </main>
+    </div>
+
+    <div class="amee-dev amee-dev__picker" id="picker" hidden>
+      <h1>Pick a skin to preview</h1>
+      <ul id="picker-list"></ul>
+    </div>
+
+    <script type="module" src="/web/harness.js"></script>
+  </body>
+</html>

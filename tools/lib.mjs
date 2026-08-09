@@ -282,6 +282,17 @@ export function validateManifestRules(m, bounds) {
     );
   }
 
+  // `pip_dock_edge: "none"` is an opt-out, so an alignment or a gap alongside it
+  // describes a dock that will never exist. Amee rejects that rather than
+  // ignoring the extra fields, and so must we.
+  if (m.pip_dock_edge === "none") {
+    for (const key of ["pip_dock_align", "pip_dock_gap"]) {
+      if (m[key] !== undefined) {
+        errors.push(`manifest.json: \`${key}\` can't be set when \`pip_dock_edge\` is "none"`);
+      }
+    }
+  }
+
   return errors;
 }
 

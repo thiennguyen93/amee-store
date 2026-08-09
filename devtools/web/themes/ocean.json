@@ -1,0 +1,24 @@
+{
+  "id": "ocean",
+  "name": "Ocean Glass",
+  "author": "Amee",
+  "description": "Cool cyan-blue frosted glass.",
+  "tokens": {
+    "--font": "-apple-system, 'SF Pro Text', Inter, Avenir, Helvetica, Arial, sans-serif",
+    "--text": "#eef7fb",
+    "--text-muted": "rgba(238, 247, 251, 0.62)",
+    "--accent": "#4fd1e8",
+    "--accent-text": "#04222b",
+    "--danger": "#ff7a7a",
+    "--warning": "#e8b84f",
+    "--surface": "rgba(16, 34, 46, 0.55)",
+    "--surface-hover": "rgba(24, 48, 62, 0.65)",
+    "--surface-active": "rgba(10, 22, 30, 0.7)",
+    "--border": "rgba(210, 245, 255, 0.18)",
+    "--blur": "28px",
+    "--radius": "16px",
+    "--radius-pill": "999px",
+    "--shadow": "0 4px 18px rgba(0, 10, 20, 0.32)",
+    "--bg": "radial-gradient(1200px circle at 10% -10%, rgba(79, 209, 232, 0.22), transparent 55%), radial-gradient(900px circle at 100% 10%, rgba(80, 130, 255, 0.14), transparent 50%), linear-gradient(165deg, #0d2430 0%, #081821 60%, #040d13 100%)"
+  }
+}

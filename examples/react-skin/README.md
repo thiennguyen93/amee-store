@@ -35,26 +35,39 @@ comments there:
 | `src/mount.tsx` | The `mount(container, amee)` export Amee calls — creates a React root and renders `<App>`. Returns a cleanup that unmounts. |
 | `src/App.tsx` | The UI: artwork, title, transport, volume, spectrum bars. |
 | `src/hooks.ts` | Thin React wrappers over the SDK's subscribe-and-unsubscribe pattern. |
-| `src/amee-sdk.d.ts` | Types for `window.amee`. Hand-maintained against `docs/SKINS.md`. |
 | `src/App.css` | Inlined into `main.js` at build time. |
 
 ## Develop
 
 ```sh
 npm install
-npm run dev          # vite build --watch, writes dist/main.js on every save
+npm run preview      # builds on every save, opens the harness, live-reloads
 ```
 
-Then from the repository root:
+That is one command: it starts `vite build --watch` for you and serves the
+preview harness at <http://127.0.0.1:4173>. Save a file, the page remounts.
+
+If you'd rather keep the build in its own terminal:
+
+```sh
+npm run dev          # terminal 1 — vite build --watch, writes dist/main.js
+node ../../devtools/dev.mjs .   # terminal 2 — the harness
+```
+
+The harness mounts your skin exactly the way Amee does — same blob-URL ES module
+import, same window shape — against a mock `window.amee` with working transport,
+volume, a six-track playlist built to break layouts, and a real 512-bin spectrum
+computed from real audio. It also shows every SDK call you make and flags the
+mistakes that are silent in the app. See
+[`devtools/README.md`](../../devtools/README.md).
+
+To try it in the real app, from the repository root:
 
 ```sh
 node tools/build.mjs examples/react-skin
 ```
 
 and drag `dist/react-skin-1.0.0.ybskin` onto Amee's **Settings → Skins** tab.
-
-There is no browser-based dev loop: a skin needs the real `window.amee` global,
-which only exists inside Amee's webview. Build, drag, look.
 
 ## Copying it
 
@@ -64,7 +77,13 @@ cp -r examples/react-skin registry/skins/my-skin
 
 Then update `manifest.json` (`id` must equal the directory name), `store.json`
 (`owner`, `license`, `tags`), `package.json`'s `name`, and replace
-`media/preview.png` with a real screenshot.
+`media/preview.png` with a real screenshot — the harness is the easiest place to
+take one.
+
+The `amee-sdk` import resolves through `tsconfig.json`'s `paths`, which lists
+both `../../types/` and `../../../types/` so it keeps working at either depth.
+Don't copy the declarations into your package; see
+[`types/README.md`](../../types/README.md).
 
 Keep the `build` block in `store.json` — that's what tells CI to run
 `npm ci && npm run build` and package `dist/` instead of expecting a committed

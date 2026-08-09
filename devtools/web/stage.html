@@ -1,0 +1,39 @@
+<!doctype html>
+<!--
+  The document a skin is mounted into.
+
+  Same shape as Amee's mini-player window: <html class="mini-player-window">,
+  a #root that fills it, and a .mini-player-host wrapper that `display:
+  contents` keeps out of layout. The element handed to mount() is that wrapper,
+  matching MiniPlayer.tsx.
+
+  This is a separate document rather than a div in the harness page for three
+  reasons, all of which are about not lying to you:
+
+    * a skin owns `document` — it appends stylesheets to document.head, reads
+      document.documentElement for tokens, and claims generic class names. In a
+      shared document the harness's own chrome would collide with all three.
+    * `getToken()` must resolve against the document the skin actually paints
+      into, so the theme panel writes its custom properties here.
+    * remounting can throw the whole document away, which is the only reliable
+      way to undo arbitrary head/root mutations.
+
+  It is same-origin, so the harness reaches in directly. There is no
+  postMessage protocol here, and there is none in Amee either — a skin runs
+  fully trusted in the app's own window (see the security section of the SDK
+  docs). Isolating it in the harness would be *more* sandboxing than
+  production, which would hide failures rather than surface them.
+-->
+<html class="mini-player-window" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Amee skin stage</title>
+    <link rel="stylesheet" href="/web/stage.css" />
+  </head>
+  <body>
+    <div id="root">
+      <div class="mini-player-host"></div>
+    </div>
+    <script type="module" src="/web/stage-boot.js"></script>
+  </body>
+</html>

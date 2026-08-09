@@ -50,6 +50,25 @@
       "minimum": 100,
       "maximum": 10000,
       "default": 1500
+    },
+    "pip_dock_edge": {
+      "type": "string",
+      "description": "Which edge of the browser's Picture-in-Picture window the mini player attaches to. \"none\" opts out of docking entirely, and then pip_dock_align and pip_dock_gap must not be set.",
+      "enum": ["top", "bottom", "left", "right", "none"],
+      "default": "bottom"
+    },
+    "pip_dock_align": {
+      "type": "string",
+      "description": "Where along that edge the mini player sits. Requires pip_dock_edge to be something other than \"none\".",
+      "enum": ["start", "center", "end"],
+      "default": "center"
+    },
+    "pip_dock_gap": {
+      "type": "number",
+      "description": "Distance in logical pixels between the PiP window and the mini player's *visible content* — a reserved content_height band does not count toward it. Requires pip_dock_edge to be something other than \"none\".",
+      "minimum": 0,
+      "maximum": 200,
+      "default": 8
     }
   }
 }

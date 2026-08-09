@@ -20,4 +20,10 @@ index.json.sig
 *.pem
 !keys/*.pub
 
+# Audio you drop in for the preview harness (devtools/dev.mjs --audio). Your
+# music is yours; the harness ships a synthesiser precisely so this directory
+# can stay empty.
+devtools/audio/*
+!devtools/audio/.gitkeep
+
 .DS_Store

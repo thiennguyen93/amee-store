@@ -16,7 +16,23 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "baseUrl": ".",
+    "paths": {
+      // The SDK types live once, at the repository root (see types/README.md),
+      // so every package compiles against the same declaration instead of a
+      // hand-maintained copy that drifts. Two candidates because a package sits
+      // at either examples/<id>/ or registry/<kind>/<id>/ — TypeScript tries
+      // each until one resolves, so this survives
+      // `cp -r examples/react-skin registry/skins/my-skin` unedited.
+      "amee-sdk": ["../../types/amee-sdk.d.ts", "../../../types/amee-sdk.d.ts"]
+    }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": [
+    "src",
+    "vite.config.ts",
+    "../../types/amee-sdk.d.ts",
+    "../../../types/amee-sdk.d.ts"
+  ]
 }

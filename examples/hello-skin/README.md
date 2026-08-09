@@ -20,7 +20,19 @@ Then, in `registry/skins/my-skin/`:
 4. **`media/preview.png`** — a real screenshot of your skin, same aspect ratio
    as `width`/`height`, under 1 MB.
 
-## Build and try it
+## Preview it
+
+```sh
+node devtools/dev.mjs examples/hello-skin
+```
+
+Opens a local harness that mounts the skin the way Amee does, with working
+transport, volume, a real spectrum and a six-track playlist chosen to break
+layouts. Save `main.js` or `style.css` and it remounts. Point it at your own
+directory once you have copied this one. See
+[`devtools/README.md`](../../devtools/README.md).
+
+## Build and try it in Amee
 
 ```sh
 node tools/validate.mjs registry/skins/my-skin
@@ -30,9 +42,10 @@ node tools/build.mjs    registry/skins/my-skin
 That writes `dist/my-skin-1.0.0.ybskin`. Drag it onto Amee's **Settings →
 Skins** tab to install, then click the card to activate it.
 
-While iterating, re-run `build.mjs` and drag the new file in again — Amee
-replaces an existing skin of the same id when it comes from the store, and
-offers to replace it when you sideload.
+While iterating, prefer the harness above — this loop exists for confirming the
+real thing, not for every edit. When you do use it, re-run `build.mjs` and drag
+the new file in again: Amee replaces an existing skin of the same id when it
+comes from the store, and offers to replace it when you sideload.
 
 ## What this example demonstrates
 

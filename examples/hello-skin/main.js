@@ -18,13 +18,19 @@ const ICONS = {
   next: '<svg viewBox="0 0 24 24"><path d="M17 6v12h-2V6zM6 6l9 6-9 6z" fill="currentColor"/></svg>',
 };
 
-export async function mount(container, amee) {
+// Deliberately not `async`. Amee calls `mount()` without awaiting it and then
+// checks `typeof cleanup === "function"` — an async mount returns a Promise, so
+// that check fails and the cleanup below never runs, leaking this skin's
+// listener and <link> on every skin switch. Anything that needs awaiting is
+// started here and settled later, as the stylesheet is.
+export function mount(container, amee) {
   // Bundled assets are read through the SDK, not a relative URL — a skin runs
   // from a blob: module, so it has no meaningful base path of its own.
-  const styleHref = await amee.getSkinAsset("style.css");
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = styleHref;
+  amee.getSkinAsset("style.css").then((href) => {
+    link.href = href;
+  });
   document.head.appendChild(link);
 
   container.innerHTML = `

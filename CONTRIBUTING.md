@@ -63,7 +63,30 @@ inside the package.
 author, description, version and the window size are read from `manifest.json`
 and must **not** be repeated here; one fact, one place.
 
-## 3. Add a preview image
+## 3. Preview it locally
+
+```sh
+node devtools/dev.mjs registry/skins/my-skin
+```
+
+This opens a browser harness that mounts your skin exactly the way Amee does —
+same blob-URL ES module import, same window shape — against a mock `window.amee`
+with working transport, volume, a real 512-bin spectrum computed from real
+audio, and a six-track playlist chosen to break layouts: a very long CJK title,
+a track with no artist and no artwork, a 90-minute recording, a live stream that
+refuses seeks, and one with a Picture-in-Picture window open. Save a file and it
+remounts.
+
+It also reports the mistakes that are silent in the real app — a cleanup that
+never runs, a subscription that outlives your skin, a token that doesn't exist,
+a spectrum you forgot to start — and decodes the three build failures that
+otherwise only appear at install time.
+
+Do this before the next step: the screenshot you need is a screenshot of this.
+
+See [devtools/README.md](./devtools/README.md).
+
+## 4. Add a preview image
 
 `media/preview.png` is required. It's the store card, so make it a real
 screenshot of your skin running, not a mockup.
@@ -75,7 +98,7 @@ screenshot of your skin running, not a mockup.
 Extra `media/screenshot-*.png` files can be listed in `store.json` under
 `screenshots`; they show in the detail panel.
 
-## 4. Build it and actually run it
+## 5. Build it and actually run it
 
 ```sh
 node tools/validate.mjs registry/skins/my-skin
@@ -83,12 +106,13 @@ node tools/build.mjs    registry/skins/my-skin
 ```
 
 That writes `dist/my-skin-1.0.0.ybskin`. Drag it onto Amee's **Settings →
-Skins** tab, then click the card to activate it. Do not skip this — CI checks
-that a package is well-formed, not that it looks right or works.
+Skins** tab, then click the card to activate it. Do not skip this — the harness
+is faithful, but it is not the app: CI checks that a package is well-formed, and
+neither checks that your skin looks right on a real desktop.
 
-Iterate by re-running `build.mjs` and dragging the new file in again.
+Iterate in the harness; come back here to confirm.
 
-## 5. Open a pull request
+## 6. Open a pull request
 
 Fill in the template honestly — the questions about network access and
 `invoke()` calls are the ones review actually turns on.

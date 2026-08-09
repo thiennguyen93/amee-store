@@ -18,6 +18,11 @@ on:
       - "examples/**"
       - "tools/**"
       - "schema/**"
+      # The SDK type declarations every TypeScript package compiles against,
+      # and the preview harness whose resolver mirrors tools/build.mjs's
+      # staging. Both can break a package build without touching a package.
+      - "types/**"
+      - "devtools/**"
       # Not because a PR may change these — it may not — but so that one which
       # does still reaches the guard below. Without them a PR touching only
       # index.json matches no path, runs no workflow, and arrives at review with
@@ -94,7 +99,11 @@ jobs:
           # A change to the tools or schemas can invalidate any package, so
           # re-check everything rather than guessing at the blast radius. Empty
           # `dirs` is how validate.mjs and build.mjs are told "all of them".
-          if echo "$files" | grep -qE '^(tools|schema)/'; then
+          # types/ is in here for the same reason as schema/: react-skin's
+          # build runs `tsc` first, so a malformed declaration fails a package
+          # build without that package having changed at all. devtools/ is
+          # deliberately *not* — it is never executed by a package's build.
+          if echo "$files" | grep -qE '^(tools|schema|types)/'; then
             echo "dirs=" >> "$GITHUB_OUTPUT"
           else
             echo "dirs=$pkgs" >> "$GITHUB_OUTPUT"
@@ -110,6 +119,14 @@ jobs:
           # files, so a PR can't shrink its own list.
           SUBMITTED_DIRS: ${{ steps.changed.outputs.pkgs }}
         run: node tools/validate.mjs ${{ steps.changed.outputs.dirs }}
+
+      # The harness's package resolver mirrors the staging step in
+      # tools/build.mjs — which asset root a package has, and which files are
+      # invisible to getSkinAsset(). That mirror is exactly the kind of thing
+      # that drifts silently: the harness keeps working and the lie only
+      # surfaces on a user's machine after install. No browser, ~2 seconds.
+      - name: Harness self-test
+        run: node devtools/selftest.mjs
 
       - name: Build
         id: build

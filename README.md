@@ -31,8 +31,20 @@ version of Amee.
 2. Start from [`examples/hello-skin`](./examples/hello-skin) (plain JavaScript,
    no build) or [`examples/react-skin`](./examples/react-skin) (React +
    TypeScript, built by CI).
-3. The SDK your skin is written against is documented in
+3. Preview it as you write it — no build, package, install cycle:
+
+   ```sh
+   node devtools/dev.mjs examples/hello-skin
+   ```
+
+   The harness mounts your skin the way Amee does, against a mock `window.amee`
+   with working transport, volume, a real 512-bin spectrum driven by real audio,
+   and a playlist chosen to break layouts. See
+   [devtools/README.md](./devtools/README.md).
+4. The SDK your skin is written against is documented in
    [the skin documentation](https://docs.amee.thiennguyen.dev/customization/skins).
+   Its type declarations live once, in [`types/`](./types) — don't copy them
+   into your package.
 
 ## Repository layout
 
@@ -42,6 +54,8 @@ registry/extensions/     reserved; not open yet
 examples/                starter templates, validated and built by CI
 schema/                  JSON Schemas for manifest.json, store.json, index.json
 tools/                   validate / build / build-index (plain node, no deps)
+devtools/                the local preview harness (plain node, no deps)
+types/                   the canonical window.amee type declarations
 index.json               the published index — generated, never hand-edited
 ```
 
@@ -65,6 +79,9 @@ No dependencies — clone the repo and run them.
 node tools/validate.mjs [path…]    # schema + manifest rules + media + size
 node tools/build.mjs    [path…]    # → dist/<id>-<version>.ybskin + sha256
 node tools/build-index.mjs         # → index.json  (run build.mjs first)
+
+node devtools/dev.mjs   <path>     # preview a package in a browser
+node devtools/selftest.mjs         # headless check of the harness's resolver
 ```
 
 With no path arguments they operate on every package in `registry/` and

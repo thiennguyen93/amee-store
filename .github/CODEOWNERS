@@ -15,9 +15,20 @@
 # deliberately not listed — ownership for those is enforced per-package by
 # `store.json`'s `owner` field in tools/validate.mjs.
 
+#
+# `devtools/` and `types/` are listed for a *different* reason, and the
+# distinction is worth keeping legible. Neither is executed by publish.yml —
+# `devtools/` is never run in CI's publish path at all, and `types/` is
+# `noEmit` declarations that cannot change a byte of a built bundle — so
+# neither expands the surface that runs beside the signing key. They are here
+# because `devtools/dev.mjs` runs on the next contributor's machine, and
+# `types/amee-sdk.d.ts` is the SDK contract every package compiles against.
+
 /.github/       @thiennguyen93
 /tools/         @thiennguyen93
 /schema/        @thiennguyen93
 /keys/          @thiennguyen93
 /index.json     @thiennguyen93
 /SECURITY.md    @thiennguyen93
+/devtools/      @thiennguyen93
+/types/         @thiennguyen93

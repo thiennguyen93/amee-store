@@ -1,0 +1,577 @@
+/* Harness chrome. Everything is scoped under .amee-dev and uses its own
+ * --dev-* custom properties rather than the --text/--surface/--accent tokens a
+ * skin reads, so the theme panel can set those to anything at all — including
+ * something unreadable, which is a thing worth being able to try — without the
+ * harness itself becoming unusable. */
+
+.amee-dev {
+  --dev-bg: #14131a;
+  --dev-panel: #1c1b24;
+  --dev-line: #2b2a36;
+  --dev-text: #e8e7f0;
+  --dev-dim: #9a98ab;
+  --dev-accent: #7c6cff;
+  --dev-warn: #e0a83a;
+  --dev-danger: #ff6b6b;
+  --dev-ok: #4ec9a0;
+
+  font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--dev-text);
+}
+
+body {
+  margin: 0;
+  background: var(--dev-bg);
+  color: #e8e7f0;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* --- toolbar ------------------------------------------------------------ */
+
+.amee-dev__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  background: var(--dev-panel);
+  border-bottom: 1px solid var(--dev-line);
+  flex-wrap: wrap;
+}
+
+.amee-dev__brand,
+.amee-dev__transport,
+.amee-dev__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.amee-dev__transport {
+  flex: 1;
+  min-width: 320px;
+}
+
+.amee-dev__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dev-accent);
+  box-shadow: 0 0 10px var(--dev-accent);
+}
+
+.amee-dev__chip {
+  color: var(--dev-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.amee-dev__time {
+  color: var(--dev-dim);
+  font-variant-numeric: tabular-nums;
+  min-width: 92px;
+  text-align: center;
+}
+
+.amee-dev button,
+.amee-dev select,
+.amee-dev input[type="text"],
+.amee-dev input[type="number"],
+.amee-dev textarea {
+  font: inherit;
+  color: var(--dev-text);
+  background: #24232e;
+  border: 1px solid var(--dev-line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.amee-dev textarea,
+.amee-dev input[type="text"],
+.amee-dev input[type="number"] {
+  cursor: text;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.amee-dev button:hover {
+  background: #2e2d3a;
+}
+
+.amee-dev button.is-active {
+  background: var(--dev-accent);
+  border-color: var(--dev-accent);
+  color: #fff;
+}
+
+.amee-dev__cta {
+  background: var(--dev-accent) !important;
+  border-color: var(--dev-accent) !important;
+  color: #fff;
+}
+
+.amee-dev__cta[hidden] {
+  display: none;
+}
+
+.amee-dev__zoom {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.amee-dev input[type="range"] {
+  accent-color: var(--dev-accent);
+}
+
+#mirror-seek {
+  flex: 1;
+  min-width: 80px;
+}
+
+#mirror-volume {
+  width: 90px;
+}
+
+/* --- layout ------------------------------------------------------------- */
+
+.amee-dev__main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.amee-dev__viewport {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  min-width: 0;
+}
+
+/* Skins float over the desktop and lean on transparency, blur and --bg. A flat
+ * white page is a misleading canvas — a skin can look perfectly legible on it
+ * and disappear over a real wallpaper. */
+.amee-dev__viewport[data-backdrop="desk-dark"] {
+  background:
+    radial-gradient(1200px circle at 20% 0%, rgba(120, 90, 220, 0.35), transparent 60%),
+    linear-gradient(160deg, #241f38 0%, #14111f 60%, #0b0912 100%);
+}
+
+.amee-dev__viewport[data-backdrop="desk-light"] {
+  background:
+    radial-gradient(1000px circle at 80% 0%, rgba(255, 220, 180, 0.7), transparent 60%),
+    linear-gradient(160deg, #eef1f7 0%, #dfe4ee 60%, #cfd6e4 100%);
+}
+
+.amee-dev__viewport[data-backdrop="photo"] {
+  background:
+    radial-gradient(600px circle at 30% 30%, rgba(255, 140, 90, 0.55), transparent 60%),
+    radial-gradient(700px circle at 75% 65%, rgba(60, 200, 190, 0.5), transparent 60%),
+    linear-gradient(120deg, #3a2b4d, #10222e 70%);
+}
+
+.amee-dev__viewport[data-backdrop="checker"] {
+  background-color: #6e6e78;
+  background-image:
+    linear-gradient(45deg, #4d4d55 25%, transparent 25%),
+    linear-gradient(-45deg, #4d4d55 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #4d4d55 75%),
+    linear-gradient(-45deg, transparent 75%, #4d4d55 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.amee-dev__backdrops {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0.55;
+  transition: opacity 0.15s;
+  z-index: 5;
+}
+
+.amee-dev__backdrops:hover {
+  opacity: 1;
+}
+
+.amee-dev__backdrops button {
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+.amee-dev__stage-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.amee-dev__stage {
+  position: relative;
+  /* The scale origin is the centre so zooming doesn't walk the stage off
+   * screen; the transform is on the wrapper, not the frame, so the frame's own
+   * CSS pixels stay 1:1 with the skin's declared size. */
+  transform-origin: center center;
+}
+
+.amee-dev__stage iframe {
+  display: block;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+}
+
+.amee-dev__guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.amee-dev__guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+/* The band a `content_height` manifest reserves and does not paint into. In the
+ * app it is click-through unless the skin reclaims part of it with
+ * reportContentExtent(). */
+.amee-dev__guide--dead {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 90, 90, 0.16) 0 6px,
+    transparent 6px 12px
+  );
+  outline: 1px dashed rgba(255, 90, 90, 0.55);
+  outline-offset: -1px;
+}
+
+/* The part of it the skin has reclaimed. */
+.amee-dev__guide--claimed {
+  background: rgba(78, 201, 160, 0.16);
+  outline: 1px dashed rgba(78, 201, 160, 0.6);
+  outline-offset: -1px;
+}
+
+.amee-dev__stage-label {
+  color: var(--dev-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.amee-dev__pip {
+  position: absolute;
+  width: 320px;
+  height: 180px;
+  background: rgba(10, 10, 16, 0.85);
+  border: 1px solid var(--dev-line);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--dev-dim);
+  font-size: 11px;
+  cursor: grab;
+  z-index: 2;
+}
+
+/* `display: grid` above would otherwise beat the UA's [hidden] rule and leave
+ * the fake PiP window on screen permanently. */
+.amee-dev__pip[hidden] {
+  display: none;
+}
+
+.amee-dev__banner {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  padding: 10px 12px;
+  background: #23202e;
+  border: 1px solid var(--dev-warn);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: #f0e2c4;
+  z-index: 6;
+}
+
+.amee-dev__chips {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.amee-dev__chips div {
+  background: #23222e;
+  border: 1px solid var(--dev-line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--dev-dim);
+}
+
+.amee-dev__modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 7, 12, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+}
+
+.amee-dev__dialog {
+  width: 380px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #262530;
+  border: 1px solid var(--dev-line);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.amee-dev__dialog .amee-dev__row {
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* --- inspector ---------------------------------------------------------- */
+
+.amee-dev__rail {
+  width: 380px;
+  flex: 0 0 380px;
+  display: flex;
+  flex-direction: column;
+  background: var(--dev-panel);
+  border-left: 1px solid var(--dev-line);
+  min-height: 0;
+}
+
+.amee-dev__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  border-bottom: 1px solid var(--dev-line);
+}
+
+.amee-dev__tabs button {
+  font-size: 11px;
+  padding: 3px 8px;
+  position: relative;
+}
+
+.amee-dev__tabs button[data-badge]::after {
+  content: attr(data-badge);
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--dev-danger);
+  color: #fff;
+  font-size: 10px;
+}
+
+.amee-dev__panel {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  min-height: 0;
+}
+
+.amee-dev h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dev-dim);
+  margin: 14px 0 6px;
+}
+
+.amee-dev h2:first-child {
+  margin-top: 0;
+}
+
+.amee-dev p {
+  margin: 4px 0 8px;
+  color: var(--dev-dim);
+  line-height: 1.5;
+}
+
+.amee-dev__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+
+.amee-dev__row label {
+  flex: 1;
+  color: var(--dev-text);
+}
+
+.amee-dev__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.amee-dev__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.amee-dev__list li {
+  border: 1px solid var(--dev-line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.amee-dev__list li.is-active {
+  border-color: var(--dev-accent);
+  background: #262336;
+}
+
+.amee-dev__list strong {
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amee-dev__list small {
+  color: var(--dev-dim);
+  line-height: 1.4;
+}
+
+.amee-dev__note {
+  border-left: 2px solid var(--dev-warn);
+  padding: 6px 8px;
+  margin: 6px 0;
+  background: #221f2c;
+  border-radius: 0 6px 6px 0;
+  color: #f0e2c4;
+  line-height: 1.5;
+}
+
+.amee-dev__note--danger {
+  border-left-color: var(--dev-danger);
+  color: #ffd7d7;
+}
+
+.amee-dev__note--ok {
+  border-left-color: var(--dev-ok);
+  color: #d3f5e8;
+}
+
+.amee-dev__note code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.amee-dev__log {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.amee-dev__log div {
+  padding: 1px 0;
+  border-bottom: 1px solid #232230;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.amee-dev__log .m {
+  color: var(--dev-accent);
+}
+
+.amee-dev__log .rejected,
+.amee-dev__log .threw {
+  color: var(--dev-danger);
+}
+
+.amee-dev__log .pending {
+  color: var(--dev-warn);
+}
+
+.amee-dev__log .dim {
+  color: var(--dev-dim);
+}
+
+.amee-dev__counts {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--dev-dim);
+}
+
+.amee-dev__token {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin: 3px 0;
+}
+
+.amee-dev__token input {
+  width: 100%;
+}
+
+.amee-dev__token span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--dev-dim);
+}
+
+/* --- picker ------------------------------------------------------------- */
+
+.amee-dev__picker {
+  padding: 40px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.amee-dev__picker h1 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.amee-dev__picker ul {
+  list-style: none;
+  padding: 0;
+}
+
+.amee-dev__picker li {
+  border: 1px solid var(--dev-line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.amee-dev__picker li:hover {
+  border-color: var(--dev-accent);
+}

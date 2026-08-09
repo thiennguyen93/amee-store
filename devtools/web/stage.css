@@ -1,0 +1,109 @@
+/* A replica of the document a skin is mounted into inside Amee.
+ *
+ * Every rule here is copied from the app's own src/App.css — the base
+ * html/body/#root block at lines 7-19, the mini-player-window overflow and
+ * centering rules at 31-49, and .mini-player-host at 2525-2527. Nothing is
+ * "improved": a skin that only looks right because the harness centred it
+ * differently, or gave it a scrollbar the real window doesn't have, is a skin
+ * that breaks after install. If you change something here, change it because
+ * App.css changed.
+ *
+ * What is NOT here is just as deliberate: the ~1000 lines of .mini-player__*
+ * rules App.css also ships. Those exist for the built-in `classic` skin, which
+ * is allowed to lean on the host's stylesheet. A third-party skin is not — it
+ * must bundle its own CSS — so the harness must not hand it any. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  /* The mini-player window is undecorated and transparent so the desktop shows
+   * through. The harness paints its "desktop" behind this frame, not in it. */
+  background: transparent;
+}
+
+/* App.css:25-35. The real window can never scroll: it has no decoration and no
+ * scrollbar, and a stray scroll would shift the pill's rendered position
+ * independently of the window's actual geometry. Anything that overflows is
+ * simply clipped — which is the behaviour a skin has to be designed around. */
+html.mini-player-window,
+html.mini-player-window body,
+html.mini-player-window #root {
+  overflow: hidden;
+}
+
+/* App.css:37-49. This is what turns a manifest's `content_height` into
+ * "reserved space split evenly above and below the content" rather than
+ * "content pinned to the top with dead space underneath". For a skin that
+ * declares no content_height it has no visible effect. */
+html.mini-player-window #root {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* App.css:2525-2527. The wrapper the host renders around the active skin.
+ * `display: contents` keeps it out of layout entirely, so the skin's own root
+ * element sizes and positions exactly as if it were mounted directly into the
+ * window. This is the element handed to mount() as `container`. */
+.mini-player-host {
+  display: contents;
+}
+
+/* Harness-only, and visible only when a skin declares `content_height`.
+ *
+ * In the real app the window is taller than the painted content and the
+ * leftover band is click-through: the OS passes clicks straight to whatever is
+ * behind Amee. A skin reclaims part of it by calling reportContentExtent().
+ * Reproducing that here is the point — a popover drawn into unreported space
+ * is unclickable in the harness for exactly the same reason it is unclickable
+ * after install, which is otherwise one of the hardest SDK bugs to find. */
+.amee-deadzone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* Deliberately `auto`, and deliberately on top of everything: this element's
+   * whole job is to *swallow* clicks the way the OS does when it passes them
+   * through Amee's window to whatever is behind it. A skin drawing a popover
+   * into unreported space finds it unclickable here for the same reason it is
+   * unclickable after install. */
+  pointer-events: auto;
+  z-index: 2147483000;
+}
+
+html[data-amee-show-deadzone="true"] .amee-deadzone {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 90, 90, 0.14) 0 6px,
+    transparent 6px 12px
+  );
+  outline: 1px dashed rgba(255, 90, 90, 0.5);
+  outline-offset: -1px;
+}
+
+/* The AirPlay route picker. In the app this slot holds a real AVRoutePickerView
+ * laid over the window; there is exactly one per window, and the element a skin
+ * passes to attachAirPlayButton() is expected to be empty because the native
+ * view draws the glyph. Rendering a visible stand-in here makes both facts
+ * observable: draw your own icon underneath and you see a double. */
+.amee-airplay {
+  position: fixed;
+  display: grid;
+  place-items: center;
+  color: var(--text, #f3f1fa);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: default;
+  z-index: 2147483100;
+}
+
+.amee-airplay svg {
+  width: 78%;
+  height: 78%;
+}
