@@ -1,0 +1,12 @@
+{
+  "id": "amee-nano",
+  "name": "Amee Nano",
+  "author": "thiennguyen93",
+  "description": "The mini player with nothing around it. The window is fully transparent, so cover art, title and artist sit straight on the desktop with no panel behind them: depth comes from shadow instead, and the play button and progress bar stay hidden until you hover the cover.",
+  "version": "1.0.0",
+  "entry": "main.js",
+  "width": 360,
+  "height": 96,
+  "graceful_shutdown": true,
+  "graceful_shutdown_timeout_ms": 400
+}
