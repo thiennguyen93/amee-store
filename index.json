@@ -1,8 +1,35 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-09T08:22:15.223Z",
+  "generatedAt": "2026-08-10T16:43:23.851Z",
   "kinds": {
     "skins": [
+      {
+        "id": "amee-nano",
+        "name": "Amee Nano",
+        "author": "thiennguyen93",
+        "description": "The mini player with nothing around it. The window is fully transparent, so cover art, title and artist sit straight on the desktop with no panel behind them: depth comes from shadow instead, and the play button and progress bar stay hidden until you hover the cover.",
+        "version": "1.0.0",
+        "license": "MIT",
+        "tags": [
+          "nano",
+          "minimal",
+          "transparent",
+          "compact"
+        ],
+        "homepage": "https://github.com/thiennguyen93/amee-store",
+        "sdkVersion": "1",
+        "minAmeeVersion": "1.6.0",
+        "width": 360,
+        "height": 96,
+        "resizable": false,
+        "preview": "https://raw.githubusercontent.com/thiennguyen93/amee-store/main/registry/skins/amee-nano/media/preview.png",
+        "screenshots": [],
+        "download": "https://github.com/thiennguyen93/amee-store/releases/download/skins-amee-nano-v1.0.0/amee-nano-1.0.0.ybskin",
+        "sha256": "f7f0f6b8b78233e18d3594be21bc6b34b64f2e2916f1d9162c9ff9f683fecfbe",
+        "sizeBytes": 7189,
+        "sourceUrl": "https://github.com/thiennguyen93/amee-store/tree/main/registry/skins/amee-nano",
+        "publishedAt": "2026-08-10T16:43:23.843Z"
+      },
       {
         "id": "amee-v2",
         "name": "amee v2",
