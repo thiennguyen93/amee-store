@@ -1,0 +1,286 @@
+/* Amee Nano — bundled stylesheet, loaded via amee.getSkinAsset("style.css").
+   Self-contained: a skin owns the whole window and none of the host app's CSS
+   reaches it.
+
+   The window is fully transparent. There is no panel, no blur, no fill of any
+   kind behind the content — the desktop shows through everywhere except the
+   artwork itself. That means nothing here can rely on a known background
+   colour for contrast, and every bit of separation has to come from shadow.
+   The layered shadows below are load-bearing, not decoration: without them
+   white type disappears the moment somebody's wallpaper is pale. */
+
+body {
+  overflow: hidden;
+  background: transparent;
+  cursor: default;
+}
+
+.nano {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 360px;
+  height: 96px;
+  padding: 0 18px;
+  background: none;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.nano * {
+  box-sizing: border-box;
+}
+
+/* --- show / hide ---------------------------------------------------------
+
+   Driven from amee.onShow() / onHide() / onShutdown() in main.js, which add
+   and remove the two state classes below; everything here is the resting
+   state, so removing a class *is* the animation.
+
+   The window is what Amee actually shows and hides, and it is transparent, so
+   there is no card edge to slide. The content has to do the work: the artwork
+   springs up from slightly small, the type follows a beat later from slightly
+   left, and both fade. The overshoot curve on the transform is what makes it
+   land rather than stop.
+
+   Durations here are the contract main.js's LEAVE_MS is holding up its end of;
+   change them together. */
+
+.nano__art,
+.nano__body {
+  transition:
+    opacity 0.24s ease,
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Staggered, so the two halves arrive as one gesture instead of in lockstep. */
+.nano__body {
+  transition-delay: 0.05s;
+}
+
+.nano--enter .nano__art {
+  opacity: 0;
+  transform: scale(0.86);
+}
+
+.nano--enter .nano__body {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* Leaving is faster, un-staggered and barely travels: a dismissal that takes
+   its time reads as the app being slow to respond. */
+.nano--leave .nano__art,
+.nano--leave .nano__body {
+  opacity: 0;
+  transform: scale(0.97);
+  transition-duration: 0.19s, 0.19s;
+  transition-delay: 0s;
+  transition-timing-function: ease-in;
+}
+
+/* --- artwork ------------------------------------------------------------ */
+
+/* The one opaque thing on screen, so it carries the heaviest shadow: a tight
+   contact shadow plus a wide soft one is what makes it read as sitting above
+   the desktop rather than pasted onto it. The inset hairline keeps its edge
+   defined against a wallpaper that happens to match the cover. */
+.nano__art {
+  position: relative;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(30, 32, 38, 0.85);
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.45),
+    0 8px 22px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.nano__artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.2s ease;
+}
+
+/* Sits under `.nano__artwork`, only visible while there's no cover to show
+   (see main.js's `nano__art--no-artwork` toggle). */
+.nano__artwork-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nano__artwork-placeholder svg {
+  width: 38%;
+  height: 38%;
+}
+
+.nano__art--no-artwork .nano__artwork {
+  opacity: 0;
+}
+
+.nano__art--no-artwork .nano__artwork-placeholder {
+  opacity: 1;
+}
+
+/* --- the two hidden controls -------------------------------------------- */
+
+/* `.amee-hover` is set by amee.trackHover() from native cursor tracking. Keyed
+   off that alone and never `:hover`, which doesn't update while Amee is
+   unfocused and freezes instead of clearing when the cursor leaves. */
+
+.nano__play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.nano__art.amee-hover .nano__play {
+  opacity: 1;
+}
+
+/* Overlaid on the cover rather than given a row of its own, so revealing it
+   costs no layout — and so it has an opaque thing to sit on, which a bar out in
+   the transparent area would not. */
+.nano__progress {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.nano__art.amee-hover .nano__progress {
+  opacity: 1;
+}
+
+.nano__progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
+  transition: width 0.25s linear;
+}
+
+/* --- title / artist ------------------------------------------------------ */
+
+.nano__body {
+  flex: 1;
+  /* Without this the flex child refuses to shrink and a long title pushes the
+     content past 360px instead of ellipsizing. */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Three jobs, in three groups, because this type has to survive any wallpaper
+   underneath it:
+
+     the four 1px offsets   a soft rim hugging the glyph on all sides. This is
+                            the load-bearing one — it thickens the edge enough
+                            that thin strokes survive a busy photo or a pale
+                            desktop, and unlike one big blurred halo it stays
+                            attached to the letterform instead of smearing a
+                            grey rectangle across the wallpaper;
+     0 2px 6px              the drop that makes the text read as raised off the
+                            desktop rather than printed on it;
+     0 0 14px               a restrained glow that takes the edge off whatever
+                            is immediately behind, without becoming a panel by
+                            accident.
+
+   The light shadow above the glyphs is the highlight catching the top edge —
+   the other half of "raised". */
+.nano__title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.75),
+    0 -1px 1px rgba(0, 0, 0, 0.5),
+    1px 0 1px rgba(0, 0, 0, 0.6),
+    -1px 0 1px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(0, 0, 0, 0.45),
+    0 -1px 0 rgba(255, 255, 255, 0.14);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Kept at 0.9, not the ~0.65 a secondary line usually gets: dimming it is a
+   luxury you can afford against a known background, and this one has none. The
+   size and weight already carry the hierarchy. */
+.nano__artist {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.75),
+    0 -1px 1px rgba(0, 0, 0, 0.5),
+    1px 0 1px rgba(0, 0, 0, 0.6),
+    -1px 0 1px rgba(0, 0, 0, 0.6),
+    0 2px 5px rgba(0, 0, 0, 0.55),
+    0 0 12px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nano--empty .nano__artist {
+  display: none;
+}
+
+/* The show/hide states still apply here — main.js adds and removes the classes
+   either way — they just resolve instantly, so the skin appears and disappears
+   without travelling. */
+@media (prefers-reduced-motion: reduce) {
+  .nano__art,
+  .nano__body,
+  .nano__artwork,
+  .nano__artwork-placeholder,
+  .nano__play,
+  .nano__progress,
+  .nano__progress-fill {
+    transition: none;
+  }
+
+  .nano--enter .nano__art,
+  .nano--enter .nano__body,
+  .nano--leave .nano__art,
+  .nano--leave .nano__body {
+    transform: none;
+  }
+}
